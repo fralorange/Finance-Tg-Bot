@@ -1,5 +1,6 @@
 ﻿using FreelanceBotBase.Bot.Commands.Factory;
 using FreelanceBotBase.Bot.Commands.Interface;
+using FreelanceBotBase.Bot.Commands.Topup;
 using FreelanceBotBase.Bot.Services.ChatState;
 using FreelanceBotBase.Domain.FSM;
 using FreelanceBotBase.Domain.States;
@@ -39,7 +40,7 @@ namespace FreelanceBotBase.Bot.Handlers.Update
 
             var handler = update switch
             {
-                { Message: { SuccessfulPayment: { } successfulPayment } msg } => BotOnSuccessfulPaymentReceived(successfulPayment, msg.Chat.Id, cancellationToken),
+                { Message: { SuccessfulPayment: { } } msg } => BotOnSuccessfulPaymentReceived(msg, cancellationToken),
                 { Message: { } message } => BotOnMessageReceived(message, stateMachine, cancellationToken),
                 { EditedMessage: { } message } => BotOnMessageReceived(message, stateMachine, cancellationToken),
                 { CallbackQuery: { } callbackQuery } => BotOnCallbackQueryReceived(callbackQuery, stateMachine, cancellationToken),
@@ -124,12 +125,13 @@ namespace FreelanceBotBase.Bot.Handlers.Update
                 cancellationToken: cancellationToken);
         }
 
-        private async Task BotOnSuccessfulPaymentReceived(SuccessfulPayment successfulPayment, long chatId, CancellationToken cancellationToken)
+        private async Task BotOnSuccessfulPaymentReceived(Message message, CancellationToken cancellationToken)
         {
-            await _botClient.SendTextMessageAsync(
-                chatId: chatId,
-                text: $"Баланс успешно пополнен на {successfulPayment.TotalAmount / 100} руб.",
-                cancellationToken: cancellationToken);
+            // надо будет реализовывать EF Core транзакции. в случае невыполнения транзакции оставить контакты поддержки в Telegram (админа бота)
+
+            ITextCommand command = _commandFactory.CreateSuccessfulPaymentCommand();
+
+            await command.ExecuteAsync(message, cancellationToken);
         }
 
         private Task UnknownUpdateHandlerAsync(Telegram.Bot.Types.Update update, CancellationToken cancellationToken)

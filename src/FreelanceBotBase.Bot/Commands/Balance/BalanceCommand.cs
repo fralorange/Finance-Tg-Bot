@@ -4,18 +4,17 @@ using FreelanceBotBase.Infrastructure.Repository;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
-namespace FreelanceBotBase.Bot.Commands.Topup
+namespace FreelanceBotBase.Bot.Commands.Balance
 {
-    public class TopUpCommand : TextCommandBase
+    public class BalanceCommand : TextCommandBase
     {
         private readonly IRepository<UserBalance> _repository;
 
-        public TopUpCommand(ITelegramBotClient botClient, IRepository<UserBalance> repository) : base(botClient)
+        public BalanceCommand(ITelegramBotClient botClient, IRepository<UserBalance> repository) : base(botClient)
             => _repository = repository;
 
-        public async override Task<Message> ExecuteAsync(Message message, CancellationToken cancellationToken)
+        public override async Task<Message> ExecuteAsync(Message message, CancellationToken cancellationToken)
         {
             var userId = message.From!.Id;
             var userBalance = await _repository.GetByPredicateAsync(ub => ub.UserId == userId);
@@ -31,24 +30,9 @@ namespace FreelanceBotBase.Bot.Commands.Topup
                     cancellationToken: cancellationToken);
             }
 
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("100 руб.", "checkout_100"),
-                    InlineKeyboardButton.WithCallbackData("200 руб.", "checkout_200"),
-                    InlineKeyboardButton.WithCallbackData("500 руб.", "checkout_500"),
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData("Другая сумма", "checkout_other"),
-                }
-            });
-
             return await BotClient.SendTextMessageAsync(
                 chatId: chatId,
-                text: "Выберите сумму для пополнения баланса:",
-                replyMarkup: inlineKeyboard,
+                text: $"Баланс пользователя {message.From.Username} составляет {userBalance.Balance} руб.",
                 cancellationToken: cancellationToken);
         }
     }

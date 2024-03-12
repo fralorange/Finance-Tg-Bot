@@ -9,6 +9,9 @@ using FreelanceBotBase.Bot.Services.Receiver;
 using FreelanceBotBase.Bot.Services.Polling;
 using FreelanceBotBase.Bot.Commands.Factory;
 using FreelanceBotBase.Bot.Services.ChatState;
+using FreelanceBotBase.Infrastructure.Repository;
+using FreelanceBotBase.Domain.UserBalance;
+using FreelanceBotBase.Infrastructure.Repository.Database;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -28,6 +31,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 return new TelegramBotClient(options, httpClient);
             });
 
+        services.AddSingleton<IRepository<UserBalance>, InMemoryUserBalanceRepository>();
         services.AddSingleton<CommandFactory>();
         services.AddSingleton<ChatStateService>();
         services.AddScoped<UpdateHandler>();

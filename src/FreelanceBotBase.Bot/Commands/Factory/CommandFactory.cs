@@ -1,11 +1,14 @@
-﻿using FreelanceBotBase.Bot.Commands.Checkout;
+﻿using FreelanceBotBase.Bot.Commands.Balance;
+using FreelanceBotBase.Bot.Commands.Checkout;
 using FreelanceBotBase.Bot.Commands.Enter;
+using FreelanceBotBase.Bot.Commands.Initialization;
 using FreelanceBotBase.Bot.Commands.Interface;
 using FreelanceBotBase.Bot.Commands.Null;
 using FreelanceBotBase.Bot.Commands.Topup;
-using FreelanceBotBase.Bot.Services.ChatState;
 using FreelanceBotBase.Domain.FSM;
+using FreelanceBotBase.Domain.UserBalance;
 using FreelanceBotBase.Infrastructure.Configuration;
+using FreelanceBotBase.Infrastructure.Repository;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
@@ -15,20 +18,29 @@ namespace FreelanceBotBase.Bot.Commands.Factory
     {
         private readonly ITelegramBotClient _botClient;
         private readonly string _providerToken;
+        private readonly IRepository<UserBalance> _repository;
 
-        public CommandFactory(ITelegramBotClient botClient, IOptions<BotConfiguration> config)
+        public CommandFactory(ITelegramBotClient botClient, IOptions<BotConfiguration> config, IRepository<UserBalance> repository)
         {
             _botClient = botClient;
             _providerToken = config.Value.ProviderToken;
+            _repository = repository;
         }
 
         public ITextCommand CreateCommand(string commandName)
         {
             return commandName switch
             {
-                "/topup" => new TopUpCommand(_botClient),
+                "/start" => new InitializationCommand(_botClient, _repository),
+                "/topup" => new TopUpCommand(_botClient, _repository),
+                "/balance" => new BalanceCommand(_botClient, _repository),
                 _ => new NullCommand()
             };
+        }
+
+        public ITextCommand CreateSuccessfulPaymentCommand()
+        {
+            return new SuccessfulPaymentCommand(_botClient, _repository);
         }
 
         public ICallbackCommand CreateCallbackCommand(string commandParam, BotStateMachine stateMachine)
