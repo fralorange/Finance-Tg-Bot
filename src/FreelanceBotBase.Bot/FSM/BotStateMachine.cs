@@ -6,7 +6,7 @@ namespace FreelanceBotBase.Domain.FSM
     public class BotStateMachine
     {
         public State CurrentState { get; private set; }
-        public ICommand<object>? WaitingForCommand { get; private set; }
+        public object? WaitingForCommand { get; private set; }
 
         public Dictionary<State, Dictionary<Trigger, State>> Transitions { get; }
 
@@ -40,7 +40,15 @@ namespace FreelanceBotBase.Domain.FSM
 
         public void SetWaitingForCommand<T>(ICommand<T> command) where T : class
         {
-            WaitingForCommand = command as ICommand<object>;
+            WaitingForCommand = command;
+        }
+
+        public async Task ExecuteWaitingCommand<T>(T input, CancellationToken cancellationToken) where T : class
+        {
+            if (WaitingForCommand is ICommand<T> command)
+            {
+                await command.ExecuteAsync(input, cancellationToken);
+            }
         }
     }
 }

@@ -10,6 +10,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.Payments;
 
 namespace FreelanceBotBase.Bot.Handlers.Update
 {
@@ -38,11 +39,13 @@ namespace FreelanceBotBase.Bot.Handlers.Update
 
             var handler = update switch
             {
+                { Message: { SuccessfulPayment: { } successfulPayment } msg } => BotOnSuccessfulPaymentReceived(successfulPayment, msg.Chat.Id, cancellationToken),
                 { Message: { } message } => BotOnMessageReceived(message, stateMachine, cancellationToken),
                 { EditedMessage: { } message } => BotOnMessageReceived(message, stateMachine, cancellationToken),
                 { CallbackQuery: { } callbackQuery } => BotOnCallbackQueryReceived(callbackQuery, stateMachine, cancellationToken),
                 { InlineQuery: { } inlineQuery } => BotOnInlineQueryReceived(inlineQuery, cancellationToken),
                 { ChosenInlineResult: { } chosenInlineResult } => BotOnChosenInlineResultReceived(chosenInlineResult, cancellationToken),
+                { PreCheckoutQuery: { } preCheckoutQuery } => BotOnPreCheckoutQueryReceived(preCheckoutQuery, cancellationToken),
                 _ => UnknownUpdateHandlerAsync(update, cancellationToken)
             };
 
@@ -57,7 +60,7 @@ namespace FreelanceBotBase.Bot.Handlers.Update
 
             if (stateMachine.CurrentState == State.WaitingForUserInput)
             {
-                await stateMachine.WaitingForCommand!.ExecuteAsync(message, cancellationToken);
+                await stateMachine.ExecuteWaitingCommand(message, cancellationToken);
                 stateMachine.ChangeState(Trigger.UserInputReceived);
             }
             else
@@ -74,12 +77,12 @@ namespace FreelanceBotBase.Bot.Handlers.Update
 
             if (stateMachine.CurrentState == State.WaitingForUserInput)
             {
-                await stateMachine.WaitingForCommand!.ExecuteAsync(callbackQuery, cancellationToken);
+                await stateMachine.ExecuteWaitingCommand(callbackQuery, cancellationToken);
                 stateMachine.ChangeState(Trigger.UserInputReceived);
             }
             else
             {
-                ICallbackCommand command = _commandFactory.CreateCallbackCommand(callbackQuery.Data);
+                ICallbackCommand command = _commandFactory.CreateCallbackCommand(callbackQuery.Data!, stateMachine);
                 await command.ExecuteAsync(callbackQuery, cancellationToken);
             }
         }
@@ -111,6 +114,21 @@ namespace FreelanceBotBase.Bot.Handlers.Update
             await _botClient.SendTextMessageAsync(
                 chatId: chosenInlineResult.From.Id,
                 text: $"You chose result with Id: {chosenInlineResult.ResultId}",
+                cancellationToken: cancellationToken);
+        }
+
+        private async Task BotOnPreCheckoutQueryReceived(PreCheckoutQuery preCheckoutQuery, CancellationToken cancellationToken)
+        {
+            await _botClient.AnswerPreCheckoutQueryAsync(
+                preCheckoutQueryId: preCheckoutQuery.Id,
+                cancellationToken: cancellationToken);
+        }
+
+        private async Task BotOnSuccessfulPaymentReceived(SuccessfulPayment successfulPayment, long chatId, CancellationToken cancellationToken)
+        {
+            await _botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: $"Баланс успешно пополнен на {successfulPayment.TotalAmount / 100} руб.",
                 cancellationToken: cancellationToken);
         }
 
