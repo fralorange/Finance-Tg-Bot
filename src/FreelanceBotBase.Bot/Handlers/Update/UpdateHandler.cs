@@ -125,8 +125,6 @@ namespace FreelanceBotBase.Bot.Handlers.Update
 
         private async Task BotOnSuccessfulPaymentReceived(Message message, CancellationToken cancellationToken)
         {
-            // надо будет реализовывать EF Core транзакции. в случае невыполнения транзакции оставить контакты поддержки в Telegram (админа бота)
-
             ITextCommand command = _commandFactory.CreateSuccessfulPaymentCommand();
 
             await command.ExecuteAsync(message, cancellationToken);
