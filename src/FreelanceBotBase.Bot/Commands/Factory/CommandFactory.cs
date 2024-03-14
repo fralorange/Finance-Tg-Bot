@@ -6,9 +6,8 @@ using FreelanceBotBase.Bot.Commands.Interface;
 using FreelanceBotBase.Bot.Commands.Null;
 using FreelanceBotBase.Bot.Commands.Topup;
 using FreelanceBotBase.Domain.FSM;
-using FreelanceBotBase.Domain.UserBalance;
 using FreelanceBotBase.Infrastructure.Configuration;
-using FreelanceBotBase.Infrastructure.Repository;
+using FreelanceBotBase.Infrastructure.DataAccess.Contexts.Repository;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
@@ -18,9 +17,9 @@ namespace FreelanceBotBase.Bot.Commands.Factory
     {
         private readonly ITelegramBotClient _botClient;
         private readonly string _providerToken;
-        private readonly IRepository<UserBalance> _repository;
+        private readonly IUserBalanceRepository _repository;
 
-        public CommandFactory(ITelegramBotClient botClient, IOptions<BotConfiguration> config, IRepository<UserBalance> repository)
+        public CommandFactory(ITelegramBotClient botClient, IOptions<BotConfiguration> config, IUserBalanceRepository repository)
         {
             _botClient = botClient;
             _providerToken = config.Value.ProviderToken;

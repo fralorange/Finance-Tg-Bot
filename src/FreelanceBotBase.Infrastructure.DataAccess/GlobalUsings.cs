@@ -1,0 +1,1 @@
+﻿global using UserBalanceEntity = FreelanceBotBase.Domain.UserBalance.UserBalance;

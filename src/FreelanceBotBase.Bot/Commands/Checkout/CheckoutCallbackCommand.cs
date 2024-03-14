@@ -1,7 +1,4 @@
 ﻿using FreelanceBotBase.Bot.Commands.Base;
-using FreelanceBotBase.Bot.Commands.Null;
-using FreelanceBotBase.Domain.FSM;
-using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Payments;

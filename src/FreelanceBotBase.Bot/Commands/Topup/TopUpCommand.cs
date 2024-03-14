@@ -1,6 +1,5 @@
 ﻿using FreelanceBotBase.Bot.Commands.Base;
-using FreelanceBotBase.Domain.UserBalance;
-using FreelanceBotBase.Infrastructure.Repository;
+using FreelanceBotBase.Infrastructure.DataAccess.Contexts.Repository;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -10,15 +9,15 @@ namespace FreelanceBotBase.Bot.Commands.Topup
 {
     public class TopUpCommand : TextCommandBase
     {
-        private readonly IRepository<UserBalance> _repository;
+        private readonly IUserBalanceRepository _repository;
 
-        public TopUpCommand(ITelegramBotClient botClient, IRepository<UserBalance> repository) : base(botClient)
+        public TopUpCommand(ITelegramBotClient botClient, IUserBalanceRepository repository) : base(botClient)
             => _repository = repository;
 
         public async override Task<Message> ExecuteAsync(Message message, CancellationToken cancellationToken)
         {
             var userId = message.From!.Id;
-            var userBalance = await _repository.GetByPredicateAsync(ub => ub.UserId == userId);
+            var userBalance = await _repository.GetByUserIdAsync(userId, cancellationToken);
 
             var chatId = message.Chat.Id;
 
